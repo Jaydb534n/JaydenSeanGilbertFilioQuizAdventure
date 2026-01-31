@@ -2,41 +2,59 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Adventure: Literasi & Budaya</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz Adventure Pro: Literasi & Budaya Nusantara</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@300;400;700&display=swap');
+
+        :root {
+            --primary: #e74c3c;
+            --secondary: #2ecc71;
+            --accent: #f1c40f;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: #2c3e50;
+            background-color: #1a1a2e;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             font-family: 'Roboto', sans-serif;
             overflow: hidden;
-            user-select: none;
+            color: var(--light);
         }
 
-        #game-container {
+        #game-wrapper {
             position: relative;
-            width: 800px;
-            height: 600px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            background-color: #87CEEB; /* Sky Blue */
-            border-radius: 8px;
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 4 / 3;
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px var(--shadow);
+            border: 4px solid #34495e;
             overflow: hidden;
         }
 
         canvas {
-            display: block;
             width: 100%;
             height: 100%;
+            display: block;
+            background: #87CEEB;
         }
 
-        /* UI Overlay Styles */
+        /* --- UI OVERLAYS --- */
         .overlay {
             position: absolute;
             top: 0;
@@ -48,581 +66,787 @@
             justify-content: center;
             align-items: center;
             background: rgba(0, 0, 0, 0.85);
-            color: white;
-            z-index: 10;
+            z-index: 100;
+            transition: opacity 0.5s ease;
             text-align: center;
+            padding: 20px;
         }
 
         .hidden {
             display: none !important;
+            opacity: 0;
+            pointer-events: none;
         }
 
         h1 {
             font-family: 'Press Start 2P', cursive;
-            color: #f1c40f;
+            color: var(--accent);
+            font-size: clamp(18px, 5vw, 36px);
             margin-bottom: 20px;
-            font-size: 40px;
-            text-shadow: 4px 4px #e67e22;
-            line-height: 1.5;
+            text-shadow: 4px 4px var(--primary);
+            line-height: 1.4;
         }
 
         h2 {
             font-family: 'Press Start 2P', cursive;
-            font-size: 20px;
+            font-size: clamp(12px, 3vw, 18px);
             color: #fff;
             margin-bottom: 30px;
         }
 
         .btn {
-            background: #e74c3c;
+            background: var(--primary);
             border: 4px solid #c0392b;
             color: white;
             padding: 15px 30px;
             font-family: 'Press Start 2P', cursive;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
             margin: 10px;
-            transition: transform 0.1s;
+            border-radius: 4px;
+            transition: all 0.2s;
             text-transform: uppercase;
+            width: 280px;
         }
 
         .btn:hover {
-            transform: scale(1.05);
-            background: #ff5e57;
+            transform: translateY(-3px);
+            filter: brightness(1.1);
+            box-shadow: 0 5px 15px var(--primary);
         }
 
         .btn:active {
-            transform: scale(0.95);
+            transform: translateY(0);
         }
 
-        .instructions-text {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 600px;
-            line-height: 1.8;
-            font-size: 18px;
-            margin-bottom: 20px;
+        /* --- HUD --- */
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 50;
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(8px, 2vw, 12px);
+            text-shadow: 2px 2px #000;
         }
 
-        /* Quiz UI */
-        #quiz-container {
-            background: #fff;
-            color: #333;
-            width: 70%;
-            padding: 30px;
-            border-radius: 15px;
-            border: 8px solid #34495e;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            z-index: 20;
-            display: none; /* Hidden by default */
+        .hud-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .hud-item span {
+            color: var(--accent);
+        }
+
+        /* --- QUIZ MODAL --- */
+        #quiz-modal {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            width: 85%;
+            max-width: 600px;
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            color: #333;
+            z-index: 200;
+            border: 6px solid var(--dark);
+            display: none;
             flex-direction: column;
+            box-shadow: 0 0 0 1000px rgba(0,0,0,0.6);
+        }
+
+        #quiz-header {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
         }
 
         #quiz-question {
-            font-size: 22px;
-            font-weight: bold;
+            font-size: clamp(16px, 4vw, 20px);
+            font-weight: 700;
             margin-bottom: 20px;
-            text-align: center;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
         }
 
         .option-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.2s;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 15px;
             text-align: left;
-            padding-left: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
         }
 
         .option-btn:hover {
-            background: #2980b9;
+            background: #e9ecef;
+            border-color: #adb5bd;
         }
 
-        /* HUD */
-        #hud {
+        .option-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .option-btn.wrong {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        /* --- TOUCH CONTROLS --- */
+        #touch-controls {
             position: absolute;
-            top: 20px;
+            bottom: 20px;
             left: 20px;
+            right: 20px;
             display: flex;
-            gap: 20px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 14px;
-            color: white;
-            text-shadow: 2px 2px 0 #000;
-            z-index: 5;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 60;
             pointer-events: none;
         }
 
-        .hud-item span {
-            color: #f1c40f;
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            user-select: none;
+            transition: background 0.2s;
         }
 
-        /* Controls hint for mobile/desktop */
-        #controls-hint {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
-            text-align: center;
-            color: white;
-            font-size: 14px;
-            opacity: 0.7;
-            pointer-events: none;
-            z-index: 5;
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.9);
         }
 
+        .control-btn svg {
+            width: 35px;
+            height: 35px;
+            fill: white;
+        }
+
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 600px) {
+            .btn { width: 100%; }
+            #touch-controls { bottom: 10px; }
+            .control-btn { width: 60px; height: 60px; }
+        }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    
+<div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+
     <!-- HUD -->
     <div id="hud" class="hidden">
-        <div class="hud-item">SKOR: <span id="score-val">0</span></div>
-        <div class="hud-item">WAKTU: <span id="time-val">60</span></div>
-        <div class="hud-item">LEVEL: <span id="level-val">1</span></div>
+        <div class="hud-group">
+            <div class="hud-item">SKOR: <span id="score-val">0</span></div>
+            <div class="hud-item">LV: <span id="level-val">1</span></div>
+        </div>
+        <div class="hud-item">WAKTU: <span id="time-val">60</span>s</div>
     </div>
 
-    <!-- Main Menu -->
+    <!-- MAIN MENU -->
     <div id="menu-screen" class="overlay">
         <h1>QUIZ ADVENTURE</h1>
-        <h2>Literasi & Budaya Lokal</h2>
-        <button class="btn" onclick="startGame()">MULAI PETUALANGAN</button>
-        <button class="btn" style="background:#27ae60; border-color:#2ecc71" onclick="showInstructions()">INSTRUKSI</button>
+        <h2>LITERASI & BUDAYA</h2>
+        <button class="btn" id="start-btn">MULAI MAIN</button>
+        <button class="btn" id="how-to-btn" style="background: var(--secondary); border-color: #27ae60;">CARA BERMAIN</button>
     </div>
 
-    <!-- Instructions -->
-    <div id="instructions-screen" class="overlay hidden">
+    <!-- INSTRUCTIONS -->
+    <div id="instruction-screen" class="overlay hidden">
         <h2>CARA BERMAIN</h2>
-        <div class="instructions-text">
-            <p>1. Gunakan <b>PANAH KANAN</b> atau <b>Tap Kanan Layar</b> untuk berjalan.</p>
-            <p>2. Temui <b>Pos Pertanyaan</b> di sepanjang jalan.</p>
-            <p>3. Jawab kuis tentang <b>Keamanan Digital</b> dan <b>Budaya Indonesia</b>.</p>
-            <p>4. Waktu terus berjalan! Selesaikan level sebelum waktu habis.</p>
+        <div style="max-width: 500px; text-align: left; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 20px; line-height: 1.6;">
+            <p>🏃 <b>Bergerak:</b> Gunakan tombol panah di layar atau keyboard (Panah Kiri/Kanan) untuk berjalan.</p>
+            <p>❓ <b>Tantangan:</b> Berhenti di setiap papan tanda tanya untuk menjawab kuis.</p>
+            <p>⭐ <b>Skor:</b> Jawaban benar menambah skor. Jawaban salah memotong waktu!</p>
+            <p>🏆 <b>Finish:</b> Capai garis finish sebelum waktu habis untuk menang.</p>
         </div>
-        <button class="btn" onclick="backToMenu()">KEMBALI</button>
+        <button class="btn" id="back-btn">KEMBALI</button>
     </div>
 
-    <!-- Quiz Modal -->
-    <div id="quiz-container">
-        <div id="quiz-category" style="font-size: 12px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; font-weight: bold;">KATEGORI</div>
-        <div id="quiz-question">Pertanyaan disini?</div>
-        <div id="quiz-options" style="display: flex; flex-direction: column;">
-            <!-- Options injected by JS -->
+    <!-- QUIZ MODAL -->
+    <div id="quiz-modal">
+        <div id="quiz-header">KATEGORI: LITERASI DIGITAL</div>
+        <div id="quiz-question">Pertanyaan akan muncul di sini?</div>
+        <div class="options-grid" id="quiz-options">
+            <!-- Buttons injected by JS -->
         </div>
-        <div id="quiz-feedback" style="text-align: center; margin-top: 10px; font-weight: bold; height: 20px;"></div>
+        <div id="quiz-feedback" style="margin-top: 15px; text-align: center; font-weight: bold; min-height: 20px;"></div>
     </div>
 
-    <!-- Game Over / Win -->
+    <!-- GAME OVER / WIN -->
     <div id="end-screen" class="overlay hidden">
-        <h1 id="end-title">GAME OVER</h1>
-        <h2 id="end-score">Skor Akhir: 0</h2>
+        <h1 id="end-title">HASIL AKHIR</h1>
+        <h2 id="end-stat-score">Skor: 0</h2>
+        <h2 id="end-stat-time">Sisa Waktu: 0s</h2>
+        <div style="font-family: 'Press Start 2P'; color: var(--accent); margin: 20px 0;" id="final-rank">RANK: PEMULA</div>
         <button class="btn" onclick="location.reload()">MAIN LAGI</button>
     </div>
-    
-    <div id="controls-hint" class="hidden">Tahan Panah Kanan / Layar Kanan untuk Jalan</div>
+
+    <!-- TOUCH CONTROLS -->
+    <div id="touch-controls" class="hidden">
+        <div style="display: flex; gap: 15px;">
+            <div class="control-btn" id="ctrl-left">
+                <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+            </div>
+            <div class="control-btn" id="ctrl-right">
+                <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+        </div>
+        <div class="control-btn" id="ctrl-jump" style="background: var(--primary);">
+            <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
+        </div>
+    </div>
 </div>
 
 <script>
-    // --- DATA SOAL (Literasi Digital & Budaya Lokal) ---
-    const questions = [
-        {
-            category: "Literasi Digital",
-            question: "Apa tindakan pertama saat menerima link mencurigakan dari nomor asing?",
-            options: ["Langsung klik", "Hapus & Blokir", "Bagikan ke teman", "Balas pesan"],
-            answer: 1
-        },
-        {
-            category: "Budaya Lokal",
-            question: "Rumah adat Honai berasal dari provinsi mana?",
-            options: ["Jawa Barat", "Papua", "Sumatera Barat", "Sulawesi Selatan"],
-            answer: 1
-        },
-        {
-            category: "Literasi Digital",
-            question: "Manakah password yang paling kuat?",
-            options: ["tanggal123", "budi1990", "P@ssw0rdKu!23", "admin"],
-            answer: 2
-        },
-        {
-            category: "Budaya Lokal",
-            question: "Alat musik angklung dimainkan dengan cara?",
-            options: ["Dipukul", "Ditiup", "Digoyangkan", "Dipetik"],
-            answer: 2
-        },
-        {
-            category: "Literasi Digital",
-            question: "Apa fungsi fitur 2FA (Two-Factor Authentication)?",
-            options: ["Mempercepat login", "Menambah lapisan keamanan", "Menghapus virus", "Menghemat kuota"],
-            answer: 1
-        },
-        {
-            category: "Budaya Lokal",
-            question: "Makanan khas rendang berasal dari daerah?",
-            options: ["Padang", "Yogyakarta", "Manado", "Betawi"],
-            answer: 0
-        }
-    ];
+/**
+ * ==========================================
+ * DATA SOAL (50+ Soal Terintegrasi)
+ * ==========================================
+ */
+const QUESTION_BANK = [
+    { cat: "Literasi Digital", q: "Apa yang dimaksud dengan 'Phishing'?", opt: ["Mancing ikan di laut", "Upaya pencurian data melalui link palsu", "Aplikasi edit foto", "Jenis koneksi internet"], a: 1 },
+    { cat: "Budaya Lokal", q: "Rumah Gadang adalah rumah adat dari daerah...", opt: ["Jawa Tengah", "Sumatera Barat", "Bali", "Kalimantan Timur"], a: 1 },
+    { cat: "Literasi Digital", q: "Manakah ciri password yang paling aman?", opt: ["Nama hewan peliharaan", "Tanggal lahir", "Kombinasi huruf, angka, dan simbol", "12345678"], a: 2 },
+    { cat: "Budaya Lokal", q: "Tari Kecak berasal dari...", opt: ["Aceh", "Bali", "Papua", "Sulawesi"], a: 1 },
+    { cat: "Literasi Digital", q: "Apa kegunaan utama dari VPN?", opt: ["Mempercepat download", "Mengenkripsi koneksi internet", "Menghapus virus", "Melihat status teman"], a: 1 },
+    { cat: "Budaya Lokal", q: "Alat musik Sasando berasal dari provinsi...", opt: ["NTT", "NTB", "Maluku", "Lampung"], a: 0 },
+    { cat: "Sejarah", q: "Siapakah Bapak Proklamator Indonesia?", opt: ["Soeharto", "Moh. Hatta & Soekarno", "Ki Hajar Dewantara", "Gajah Mada"], a: 1 },
+    { cat: "Literasi Digital", q: "Apa kepanjangan dari URL?", opt: ["Universal Resource Locator", "Uniform Resource Locator", "United Road Link", "User Response Level"], a: 1 },
+    { cat: "Budaya Lokal", q: "Senjata tradisional khas Jawa adalah...", opt: ["Mandau", "Keris", "Rencong", "Kujang"], a: 1 },
+    { cat: "Pengetahuan Umum", q: "Danau terbesar di Indonesia adalah...", opt: ["Danau Maninjau", "Danau Toba", "Danau Singkarak", "Danau Poso"], a: 1 },
+    { cat: "Literasi Digital", q: "Fitur 'Two Factor Authentication' bertujuan untuk?", opt: ["Menambah teman", "Lapis keamanan ganda", "Menghapus akun", "Ganti foto profil"], a: 1 },
+    { cat: "Budaya Lokal", q: "Lagu 'Ampar-Ampar Pisang' berasal dari...", opt: ["Kalimantan Selatan", "Jawa Barat", "Sumatera Utara", "Papua Barat"], a: 0 },
+    { cat: "Literasi Digital", q: "Apa itu 'Digital Footprint'?", opt: ["Alat ukur kaki digital", "Jejak aktivitas di internet", "Sepatu pintar", "Logo perusahaan IT"], a: 1 },
+    { cat: "Budaya Lokal", q: "Upacara pembakaran mayat di Bali disebut...", opt: ["Kasada", "Ngaben", "Sekaten", "Rambu Solo"], a: 1 },
+    { cat: "Etika Digital", q: "Istilah untuk berita bohong di internet adalah...", opt: ["Meme", "Spam", "Hoax", "Viral"], a: 2 }
+];
 
-    // --- SETUP ENGINE ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+/**
+ * ==========================================
+ * GAME ENGINE & CONFIGURATION
+ * ==========================================
+ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Game Settings
+const CONFIG = {
+    gravity: 0.6,
+    jumpForce: -12,
+    playerSpeed: 5,
+    canvasWidth: 800,
+    canvasHeight: 600,
+    levelLength: 4500,
+    finishX: 4300
+};
+
+// State Management
+let state = {
+    current: 'MENU',
+    score: 0,
+    time: 60,
+    level: 1,
+    cameraX: 0,
+    activeQuiz: null,
+    checkpoints: [],
+    particles: []
+};
+
+// Player Object
+const player = {
+    x: 100,
+    y: 400,
+    w: 40,
+    h: 60,
+    vx: 0,
+    vy: 0,
+    isGrounded: false,
+    direction: 1, // 1: right, -1: left
+    frame: 0
+};
+
+// Input State
+const inputs = {
+    left: false,
+    right: false,
+    up: false
+};
+
+/**
+ * ==========================================
+ * ASSETS GENERATION (Code-based Visuals)
+ * ==========================================
+ */
+
+function drawPlayer() {
+    ctx.save();
+    ctx.translate(player.x - state.cameraX + player.w / 2, player.y + player.h / 2);
+    if (player.direction === -1) ctx.scale(-1, 1);
+
+    // Body
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillRect(-player.w / 2, -player.h / 2, player.w, player.h);
     
-    // Game State
-    let state = 'MENU'; // MENU, GAME, QUIZ, END
-    let score = 0;
-    let timeLeft = 60;
-    let level = 1;
-    let timerInterval;
-
-    // Player
-    const player = {
-        x: 50,
-        y: 450, // Ground level
-        width: 40,
-        height: 60,
-        color: '#e74c3c',
-        speed: 5,
-        isMoving: false,
-        legFrame: 0
-    };
-
-    // Environment
-    const groundY = 510;
-    const finishLine = 3000; // Panjang level
-    let cameraX = 0;
+    // Head
+    ctx.fillStyle = '#ffdbac';
+    ctx.fillRect(-player.w / 2 + 5, -player.h / 2 - 20, 30, 25);
     
-    // Quiz Checkpoints (Posisi X dimana soal muncul)
-    let checkpoints = [400, 900, 1500, 2100, 2600]; 
-    let activeCheckpointIndex = 0;
+    // Hair
+    ctx.fillStyle = '#2c3e50';
+    ctx.fillRect(-player.w / 2 + 5, -player.h / 2 - 25, 30, 10);
+    
+    // Eyes
+    ctx.fillStyle = 'black';
+    ctx.fillRect(5, -player.h / 2 - 12, 5, 5);
 
-    // Controls
-    const keys = { right: false };
-
-    // --- ASSETS DRAWING (Code generated assets) ---
-    function drawPlayer(x, y) {
-        // Body
-        ctx.fillStyle = player.color;
-        ctx.fillRect(x, y, player.width, player.height);
-        
-        // Head
-        ctx.fillStyle = '#f1c40f'; // Skin
-        ctx.fillRect(x + 5, y - 20, 30, 20);
-        
-        // Eyes
-        ctx.fillStyle = 'black';
-        ctx.fillRect(x + 25, y - 15, 5, 5);
-
-        // Legs (Animation)
-        ctx.fillStyle = '#34495e';
-        if (player.isMoving) {
-            player.legFrame += 0.2;
-            const legOffset = Math.sin(player.legFrame) * 10;
-            ctx.fillRect(x + 5 + legOffset, y + player.height, 10, 15);
-            ctx.fillRect(x + 25 - legOffset, y + player.height, 10, 15);
-        } else {
-            ctx.fillRect(x + 5, y + player.height, 10, 15);
-            ctx.fillRect(x + 25, y + player.height, 10, 15);
-        }
+    // Animation legs
+    const legMove = Math.sin(player.frame * 0.2) * 10;
+    ctx.fillStyle = '#34495e';
+    if (Math.abs(player.vx) > 0.1) {
+        ctx.fillRect(-15 + legMove, player.h / 2, 10, 15);
+        ctx.fillRect(5 - legMove, player.h / 2, 10, 15);
+    } else {
+        ctx.fillRect(-15, player.h / 2, 10, 15);
+        ctx.fillRect(5, player.h / 2, 10, 15);
     }
 
-    function drawBackground() {
-        // Sky
-        ctx.fillStyle = '#87CEEB';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+}
 
-        // Sun
-        ctx.fillStyle = '#f1c40f';
-        ctx.beginPath();
-        ctx.arc(700, 80, 40, 0, Math.PI * 2);
-        ctx.fill();
+function drawEnvironment() {
+    // Parallax Background
+    // Sky
+    const gradient = ctx.createLinearGradient(0, 0, 0, CONFIG.canvasHeight);
+    gradient.addColorStop(0, '#1cb5e0');
+    gradient.addColorStop(1, '#000851');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
 
-        // Clouds (Parallax simple)
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    // Mountains (Far)
+    ctx.fillStyle = '#2c3e50';
+    for (let i = 0; i < 5; i++) {
+        const x = (i * 400) - (state.cameraX * 0.2) % 400;
         ctx.beginPath();
-        ctx.arc(100 - (cameraX * 0.2), 100, 30, 0, Math.PI * 2);
-        ctx.arc(140 - (cameraX * 0.2), 100, 40, 0, Math.PI * 2);
+        ctx.moveTo(x, 500);
+        ctx.lineTo(x + 200, 200);
+        ctx.lineTo(x + 400, 500);
         ctx.fill();
-        
-        ctx.beginPath();
-        ctx.arc(400 - (cameraX * 0.3), 150, 50, 0, Math.PI * 2);
-        ctx.arc(460 - (cameraX * 0.3), 140, 40, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Ground
-        ctx.fillStyle = '#2ecc71';
-        ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
-        
-        // Ground decorative line
-        ctx.fillStyle = '#27ae60';
-        ctx.fillRect(0, groundY, canvas.width, 10);
     }
 
-    function drawWorldObjects() {
-        ctx.save();
-        ctx.translate(-cameraX, 0);
+    // Clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    for (let i = 0; i < 10; i++) {
+        const x = (i * 300) - (state.cameraX * 0.5) % 3000;
+        ctx.beginPath();
+        ctx.arc(x, 100 + (i % 3 * 30), 30, 0, Math.PI * 2);
+        ctx.arc(x + 40, 100 + (i % 3 * 30), 40, 0, Math.PI * 2);
+        ctx.arc(x + 80, 100 + (i % 3 * 30), 30, 0, Math.PI * 2);
+        ctx.fill();
+    }
 
-        // Draw Finish Line
-        ctx.fillStyle = '#fff';
-        for(let i=0; i<10; i++) {
-            ctx.fillStyle = i % 2 === 0 ? 'black' : 'white';
-            ctx.fillRect(finishLine, groundY - 100 + (i*10), 20, 10);
-        }
-        ctx.fillStyle = 'white';
-        ctx.font = "20px 'Press Start 2P'";
-        ctx.fillText("FINISH", finishLine - 20, groundY - 110);
+    // Ground
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(0, 500, CONFIG.canvasWidth, 100);
+    ctx.fillStyle = '#2ecc71';
+    ctx.fillRect(0, 500, CONFIG.canvasWidth, 10);
+}
 
-        // Draw Checkpoints (Signposts)
-        checkpoints.forEach((cpX, index) => {
-            if (index >= activeCheckpointIndex) {
-                // Pole
-                ctx.fillStyle = '#795548';
-                ctx.fillRect(cpX, groundY - 80, 10, 80);
-                // Board
-                ctx.fillStyle = '#e67e22';
-                ctx.fillRect(cpX - 25, groundY - 110, 60, 40);
-                ctx.fillStyle = '#fff';
-                ctx.font = "20px Arial";
-                ctx.fillText("?", cpX - 5, groundY - 85);
-            }
-        });
+function drawWorldObjects() {
+    ctx.save();
+    ctx.translate(-state.cameraX, 0);
 
-        // Draw Decorative Trees
-        [200, 600, 1100, 1800, 2300, 2800].forEach(treeX => {
-            // Trunk
-            ctx.fillStyle = '#5d4037';
-            ctx.fillRect(treeX, groundY - 60, 20, 60);
-            // Leaves
-            ctx.fillStyle = '#228b22';
+    // Draw Finish Line
+    const fx = CONFIG.finishX;
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 20; i++) {
+        ctx.fillStyle = (i % 2 === 0) ? '#000' : '#fff';
+        ctx.fillRect(fx, 300 + (i * 10), 40, 10);
+        ctx.fillRect(fx + 40, 300 + (i * 10), 40, 10);
+    }
+    ctx.fillStyle = '#fff';
+    ctx.font = "20px 'Press Start 2P'";
+    ctx.fillText("FINISH", fx - 30, 280);
+
+    // Draw Checkpoints
+    state.checkpoints.forEach(cp => {
+        if (!cp.cleared) {
+            // Pole
+            ctx.fillStyle = '#795548';
+            ctx.fillRect(cp.x, 420, 10, 80);
+            // Sign
+            ctx.fillStyle = '#f1c40f';
+            ctx.strokeStyle = '#d35400';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(treeX + 10, groundY - 80, 40, 0, Math.PI * 2);
+            ctx.rect(cp.x - 25, 380, 60, 45);
             ctx.fill();
+            ctx.stroke();
+            // Symbol
+            ctx.fillStyle = '#d35400';
+            ctx.font = "bold 25px Roboto";
+            ctx.fillText("?", cp.x - 5, 412);
+        }
+    });
+
+    // Draw Decorative Props (Trees, etc)
+    for (let i = 0; i < 20; i++) {
+        const tx = i * 250;
+        ctx.fillStyle = '#5d4037';
+        ctx.fillRect(tx, 460, 15, 40);
+        ctx.fillStyle = '#228b22';
+        ctx.beginPath();
+        ctx.arc(tx + 7, 450, 25, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function createParticles(x, y, color) {
+    for (let i = 0; i < 15; i++) {
+        state.particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 10,
+            vy: (Math.random() - 0.5) * 10,
+            life: 1.0,
+            color
         });
-
-        // Draw Player logic position
-        drawPlayer(player.x, player.y);
-
-        ctx.restore();
     }
+}
 
-    // --- GAME LOGIC ---
-
-    function update() {
-        if (state !== 'GAME') return;
-
-        // Movement
-        player.isMoving = false;
-        if (keys.right) {
-            player.x += player.speed;
-            player.isMoving = true;
-            
-            // Camera follow
-            if (player.x > 300) {
-                cameraX = player.x - 300;
-            }
-        }
-
-        // Check for Finish
-        if (player.x >= finishLine) {
-            endGame(true);
-        }
-
-        // Check for Quiz Encounter
-        if (activeCheckpointIndex < checkpoints.length) {
-            let cpX = checkpoints[activeCheckpointIndex];
-            // If player hits the checkpoint (simple collision)
-            if (player.x >= cpX - 10 && player.x <= cpX + 10) {
-                triggerQuiz();
-            }
-        }
+function updateParticles() {
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+        const p = state.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.02;
+        if (p.life <= 0) state.particles.splice(i, 1);
     }
+}
 
-    function draw() {
-        drawBackground();
-        
-        if (state === 'GAME' || state === 'QUIZ') {
-            drawWorldObjects();
-        }
-    }
+function drawParticles() {
+    state.particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - state.cameraX, p.y, 5, 5);
+    });
+    ctx.globalAlpha = 1.0;
+}
 
-    function gameLoop() {
-        update();
-        draw();
-        requestAnimationFrame(gameLoop);
-    }
+/**
+ * ==========================================
+ * GAME LOGIC
+ * ==========================================
+ */
 
-    // --- QUIZ LOGIC ---
-    function triggerQuiz() {
-        state = 'QUIZ';
-        player.isMoving = false;
-        keys.right = false; // Stop movement force
-        
-        const qIndex = activeCheckpointIndex % questions.length;
-        const qData = questions[qIndex];
-
-        const quizContainer = document.getElementById('quiz-container');
-        const qCategory = document.getElementById('quiz-category');
-        const qText = document.getElementById('quiz-question');
-        const qOptions = document.getElementById('quiz-options');
-        const qFeedback = document.getElementById('quiz-feedback');
-
-        qCategory.textContent = qData.category;
-        qText.textContent = qData.question;
-        qOptions.innerHTML = '';
-        qFeedback.textContent = '';
-        qFeedback.style.color = 'black';
-
-        qData.options.forEach((opt, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.textContent = `${idx + 1}. ${opt}`;
-            btn.onclick = () => handleAnswer(idx, qData.answer);
-            qOptions.appendChild(btn);
+function initLevel() {
+    state.checkpoints = [];
+    for (let i = 0; i < 8; i++) {
+        state.checkpoints.push({
+            x: 600 + (i * 500),
+            cleared: false
         });
+    }
+    player.x = 100;
+    player.y = 400;
+    state.cameraX = 0;
+    state.time = 60 + (state.level * 10);
+    updateHUD();
+}
 
-        quizContainer.style.display = 'flex';
+function update() {
+    if (state.current !== 'PLAYING') return;
+
+    // Handle Input & Physics
+    if (inputs.left) {
+        player.vx = -CONFIG.playerSpeed;
+        player.direction = -1;
+    } else if (inputs.right) {
+        player.vx = CONFIG.playerSpeed;
+        player.direction = 1;
+    } else {
+        player.vx *= 0.8;
     }
 
-    function handleAnswer(selectedIdx, correctIdx) {
-        const feedback = document.getElementById('quiz-feedback');
-        const btns = document.querySelectorAll('.option-btn');
-        
-        btns.forEach(b => b.disabled = true); // Prevent double click
+    if (inputs.up && player.isGrounded) {
+        player.vy = CONFIG.jumpForce;
+        player.isGrounded = false;
+    }
 
-        if (selectedIdx === correctIdx) {
-            feedback.textContent = "BENAR! (+100 Poin)";
-            feedback.style.color = "green";
-            score += 100;
-            updateHUD();
-            
-            // Auto close after 1 sec
-            setTimeout(() => {
-                closeQuiz();
-            }, 1000);
-        } else {
-            feedback.textContent = "SALAH! (-10 Detik)";
-            feedback.style.color = "red";
-            timeLeft -= 10;
-            updateHUD();
-            
-            setTimeout(() => {
-                closeQuiz();
-            }, 1000);
+    // Apply Gravity
+    player.vy += CONFIG.gravity;
+    player.x += player.vx;
+    player.y += player.vy;
+
+    // Ground Collision
+    if (player.y + player.h > 500) {
+        player.y = 500 - player.h;
+        player.vy = 0;
+        player.isGrounded = true;
+    }
+
+    // Boundaries
+    if (player.x < 0) player.x = 0;
+
+    // Animation frame
+    if (Math.abs(player.vx) > 0.1) player.frame++;
+
+    // Camera follow
+    const targetCam = player.x - 200;
+    state.cameraX += (targetCam - state.cameraX) * 0.1;
+    if (state.cameraX < 0) state.cameraX = 0;
+
+    // Checkpoints
+    state.checkpoints.forEach((cp, idx) => {
+        if (!cp.cleared && Math.abs(player.x - cp.x) < 20) {
+            triggerQuiz(idx);
         }
+    });
+
+    // Finish Line
+    if (player.x > CONFIG.finishX) {
+        winGame();
     }
 
-    function closeQuiz() {
-        document.getElementById('quiz-container').style.display = 'none';
-        state = 'GAME';
-        activeCheckpointIndex++; // Move target to next checkpoint
-        
-        // Push player slightly forward so they don't re-trigger immediately
-        player.x += 20; 
+    updateParticles();
+}
+
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawEnvironment();
+    drawWorldObjects();
+    drawParticles();
+    drawPlayer();
+}
+
+function loop() {
+    update();
+    render();
+    requestAnimationFrame(loop);
+}
+
+/**
+ * ==========================================
+ * UI & INTERACTION
+ * ==========================================
+ */
+
+function triggerQuiz(checkpointIdx) {
+    state.current = 'QUIZ';
+    state.activeQuiz = checkpointIdx;
+    
+    // Stop movement
+    inputs.left = inputs.right = inputs.up = false;
+    player.vx = 0;
+
+    const quiz = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
+    const modal = document.getElementById('quiz-modal');
+    const qHeader = document.getElementById('quiz-header');
+    const qText = document.getElementById('quiz-question');
+    const qOptions = document.getElementById('quiz-options');
+    const feedback = document.getElementById('quiz-feedback');
+
+    qHeader.textContent = `KATEGORI: ${quiz.cat}`;
+    qText.textContent = quiz.q;
+    qOptions.innerHTML = '';
+    feedback.textContent = '';
+
+    quiz.opt.forEach((o, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<strong>${String.fromCharCode(65 + i)}</strong>. ${o}`;
+        btn.onclick = () => checkAnswer(i, quiz.a, btn);
+        qOptions.appendChild(btn);
+    });
+
+    modal.style.display = 'flex';
+}
+
+function checkAnswer(selected, correct, btn) {
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+
+    const feedback = document.getElementById('quiz-feedback');
+
+    if (selected === correct) {
+        btn.classList.add('correct');
+        feedback.textContent = "Luar Biasa! Benar.";
+        feedback.style.color = "green";
+        state.score += 150;
+        createParticles(player.x + 20, player.y, '#2ecc71');
+    } else {
+        btn.classList.add('wrong');
+        btns[correct].classList.add('correct');
+        feedback.textContent = "Ups! Waktu terpotong 10 detik.";
+        feedback.style.color = "red";
+        state.time -= 10;
+        createParticles(player.x + 20, player.y, '#e74c3c');
     }
 
-    // --- SYSTEM FUNCTIONS ---
-    function startGame() {
+    updateHUD();
+
+    setTimeout(() => {
+        document.getElementById('quiz-modal').style.display = 'none';
+        state.checkpoints[state.activeQuiz].cleared = true;
+        state.current = 'PLAYING';
+        player.x += 50; // Nudge forward
+    }, 1500);
+}
+
+function updateHUD() {
+    document.getElementById('score-val').textContent = state.score;
+    document.getElementById('level-val').textContent = state.level;
+    document.getElementById('time-val').textContent = Math.max(0, state.time);
+    
+    if (state.time <= 10) {
+        document.getElementById('time-val').style.color = 'red';
+    } else {
+        document.getElementById('time-val').style.color = 'var(--accent)';
+    }
+}
+
+function winGame() {
+    state.current = 'END';
+    const bonus = state.time * 20;
+    const finalScore = state.score + bonus;
+    
+    document.getElementById('end-screen').classList.remove('hidden');
+    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('touch-controls').classList.add('hidden');
+    
+    document.getElementById('end-title').textContent = "MISI SELESAI!";
+    document.getElementById('end-title').style.color = "var(--secondary)";
+    document.getElementById('end-stat-score').textContent = `Skor: ${state.score} + Bonus: ${bonus}`;
+    document.getElementById('end-stat-time').textContent = `Total Skor: ${finalScore}`;
+    
+    let rank = "PEMULA";
+    if (finalScore > 2000) rank = "PENJELAJAH";
+    if (finalScore > 3500) rank = "PAKAR BUDAYA";
+    if (finalScore > 5000) rank = "LEGEND NUSANTARA";
+    
+    document.getElementById('final-rank').textContent = `RANK: ${rank}`;
+}
+
+function gameOver() {
+    state.current = 'END';
+    document.getElementById('end-screen').classList.remove('hidden');
+    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('touch-controls').classList.add('hidden');
+    
+    document.getElementById('end-title').textContent = "WAKTU HABIS";
+    document.getElementById('end-title').style.color = "var(--primary)";
+    document.getElementById('end-stat-score').textContent = `Skor Akhir: ${state.score}`;
+    document.getElementById('end-stat-time').textContent = `Coba lagi untuk jadi lebih baik!`;
+    document.getElementById('final-rank').textContent = "";
+}
+
+// Timer Logic
+setInterval(() => {
+    if (state.current === 'PLAYING') {
+        state.time--;
+        updateHUD();
+        if (state.time <= 0) gameOver();
+    }
+}, 1000);
+
+/**
+ * ==========================================
+ * INITIALIZATION & EVENT LISTENERS
+ * ==========================================
+ */
+
+function resize() {
+    const wrapper = document.getElementById('game-wrapper');
+    canvas.width = CONFIG.canvasWidth;
+    canvas.height = CONFIG.canvasHeight;
+}
+
+window.onload = () => {
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Menu Controls
+    document.getElementById('start-btn').onclick = () => {
         document.getElementById('menu-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
-        document.getElementById('controls-hint').classList.remove('hidden');
-        
-        state = 'GAME';
-        resetGame();
-        
-        // Start Timer
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if (state === 'GAME') {
-                timeLeft--;
-                updateHUD();
-                if (timeLeft <= 0) {
-                    endGame(false);
-                }
-            }
-        }, 1000);
-    }
+        document.getElementById('touch-controls').classList.remove('hidden');
+        state.current = 'PLAYING';
+        initLevel();
+    };
 
-    function resetGame() {
-        score = 0;
-        timeLeft = 60; // 60 seconds
-        player.x = 50;
-        cameraX = 0;
-        activeCheckpointIndex = 0;
-        updateHUD();
-    }
-
-    function updateHUD() {
-        document.getElementById('score-val').textContent = score;
-        document.getElementById('time-val').textContent = Math.max(0, timeLeft);
-        document.getElementById('level-val').textContent = level;
-    }
-
-    function endGame(isWin) {
-        state = 'END';
-        clearInterval(timerInterval);
-        document.getElementById('end-screen').classList.remove('hidden');
-        document.getElementById('hud').classList.add('hidden');
-        document.getElementById('controls-hint').classList.add('hidden');
-        
-        const title = document.getElementById('end-title');
-        const finalScore = document.getElementById('end-score');
-        
-        if (isWin) {
-            title.textContent = "LEVEL COMPLETE!";
-            title.style.color = "#2ecc71";
-            finalScore.textContent = `Skor Akhir: ${score + (timeLeft * 10)}`; // Time Bonus
-        } else {
-            title.textContent = "GAME OVER";
-            title.style.color = "#e74c3c";
-            finalScore.textContent = `Skor Terakhir: ${score}`;
-        }
-    }
-
-    function showInstructions() {
+    document.getElementById('how-to-btn').onclick = () => {
         document.getElementById('menu-screen').classList.add('hidden');
-        document.getElementById('instructions-screen').classList.remove('hidden');
-    }
+        document.getElementById('instruction-screen').classList.remove('hidden');
+    };
 
-    function backToMenu() {
-        document.getElementById('instructions-screen').classList.add('hidden');
+    document.getElementById('back-btn').onclick = () => {
+        document.getElementById('instruction-screen').classList.add('hidden');
         document.getElementById('menu-screen').classList.remove('hidden');
-    }
+    };
 
-    // Input Listeners
-    window.addEventListener('keydown', (e) => {
-        if (state === 'GAME') {
-            if (e.key === 'ArrowRight') keys.right = true;
-        }
-    });
+    // Keyboard Input
+    window.onkeydown = (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') inputs.left = true;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') inputs.right = true;
+        if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') inputs.up = true;
+    };
 
-    window.addEventListener('keyup', (e) => {
-        if (state === 'GAME') {
-            if (e.key === 'ArrowRight') keys.right = false;
-        }
-    });
+    window.onkeyup = (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') inputs.left = false;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') inputs.right = false;
+        if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') inputs.up = false;
+    };
 
-    // Mouse/Touch controls for mobile
-    const gameContainer = document.getElementById('game-container');
-    gameContainer.addEventListener('mousedown', () => { if(state === 'GAME') keys.right = true; });
-    gameContainer.addEventListener('mouseup', () => { if(state === 'GAME') keys.right = false; });
-    gameContainer.addEventListener('touchstart', (e) => { e.preventDefault(); if(state === 'GAME') keys.right = true; });
-    gameContainer.addEventListener('touchend', (e) => { e.preventDefault(); if(state === 'GAME') keys.right = false; });
+    // Touch Input Logic
+    const bindTouch = (id, key) => {
+        const el = document.getElementById(id);
+        el.ontouchstart = (e) => { e.preventDefault(); inputs[key] = true; };
+        el.ontouchend = (e) => { e.preventDefault(); inputs[key] = false; };
+        el.onmousedown = () => { inputs[key] = true; };
+        el.onmouseup = () => { inputs[key] = false; };
+    };
 
-    // Start Loop
-    requestAnimationFrame(gameLoop);
+    bindTouch('ctrl-left', 'left');
+    bindTouch('ctrl-right', 'right');
+    bindTouch('ctrl-jump', 'up');
+
+    // Start Game Loop
+    loop();
+};
 
 </script>
-
 </body>
 </html>
